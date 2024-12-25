@@ -1,53 +1,69 @@
-import pandas as pd
-import scipy.stats
 import streamlit as st
-import time
+import pandas as pd
+import base64
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
 
-# these are stateful variables which are preserved as Streamlit reruns this script
-if 'experiment_no' not in st.session_state:
-    st.session_state['experiment_no'] = 0
+st.title('NFL Football Stats (Rushing) Explorer')
 
-if 'df_experiment_results' not in st.session_state:
-    st.session_state['df_experiment_results'] = pd.DataFrame(columns=['no', 'iterations', 'mean'])
+st.markdown("""
+This app performs simple webscraping of NFL Football player stats data (focusing on Rushing)!
+* **Python libraries:** base64, pandas, streamlit, numpy, matplotlib, seaborn
+* **Data source:** [pro-football-reference.com](https://www.pro-football-reference.com/).
+""")
 
-st.header('Tossing a Coin')
+st.sidebar.header('User Input Features')
+selected_year = st.sidebar.selectbox('Year', list(reversed(range(1990,2020))))
 
-chart = st.line_chart([0.5])
+# Web scraping of NFL player stats
+# https://www.pro-football-reference.com/years/2019/rushing.htm
+@st.cache
+def load_data(year):
+    url = "https://www.pro-football-reference.com/years/" + str(year) + "/rushing.htm"
+    html = pd.read_html(url, header = 1)
+    df = html[0]
+    raw = df.drop(df[df.Age == 'Age'].index) # Deletes repeating headers in content
+    raw = raw.fillna(0)
+    playerstats = raw.drop(['Rk'], axis=1)
+    return playerstats
+playerstats = load_data(selected_year)
 
-def toss_coin(n):
+# Sidebar - Team selection
+sorted_unique_team = sorted(playerstats.Tm.unique())
+selected_team = st.sidebar.multiselect('Team', sorted_unique_team, sorted_unique_team)
 
-    trial_outcomes = scipy.stats.bernoulli.rvs(p=0.5, size=n)
+# Sidebar - Position selection
+unique_pos = ['RB','QB','WR','FB','TE']
+selected_pos = st.sidebar.multiselect('Position', unique_pos, unique_pos)
 
-    mean = None
-    outcome_no = 0
-    outcome_1_count = 0
+# Filtering data
+df_selected_team = playerstats[(playerstats.Tm.isin(selected_team)) & (playerstats.Pos.isin(selected_pos))]
 
-    for r in trial_outcomes:
-        outcome_no +=1
-        if r == 1:
-            outcome_1_count += 1
-        mean = outcome_1_count / outcome_no
-        chart.add_rows([mean])
-        time.sleep(0.05)
+st.header('Display Player Stats of Selected Team(s)')
+st.write('Data Dimension: ' + str(df_selected_team.shape[0]) + ' rows and ' + str(df_selected_team.shape[1]) + ' columns.')
+st.dataframe(df_selected_team)
 
-    return mean
+# Download NBA player stats data
+# https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
+def filedownload(df):
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()  # strings <-> bytes conversions
+    href = f'<a href="data:file/csv;base64,{b64}" download="playerstats.csv">Download CSV File</a>'
+    return href
 
-number_of_trials = st.slider('Number of trials?', 1, 1000, 10)
-start_button = st.button('Run')
+st.markdown(filedownload(df_selected_team), unsafe_allow_html=True)
 
-if start_button:
-    st.write(f'Running the experiment of {number_of_trials} trials.')
-    st.session_state['experiment_no'] += 1
-    mean = toss_coin(number_of_trials)
-    st.session_state['df_experiment_results'] = pd.concat([
-        st.session_state['df_experiment_results'],
-        pd.DataFrame(data=[[st.session_state['experiment_no'],
-                            number_of_trials,
-                            mean]],
-                     columns=['no', 'iterations', 'mean'])
-        ],
-        axis=0)
-    st.session_state['df_experiment_results'] = \
-        st.session_state['df_experiment_results'].reset_index(drop=True)
+# Heatmap
+if st.button('Intercorrelation Heatmap'):
+    st.header('Intercorrelation Matrix Heatmap')
+    df_selected_team.to_csv('output.csv',index=False)
+    df = pd.read_csv('output.csv')
 
-st.write(st.session_state['df_experiment_results'])
+    corr = df.corr()
+    mask = np.zeros_like(corr)
+    mask[np.triu_indices_from(mask)] = True
+    with sns.axes_style("white"):
+        f, ax = plt.subplots(figsize=(7, 5))
+        ax = sns.heatmap(corr, mask=mask, vmax=1, square=True)
+    st.pyplot()

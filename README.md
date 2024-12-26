@@ -31,11 +31,8 @@ Ensure you have Python 3.8 or above installed on your system. You can check your
 
 ## Step 1: Clone the Repository
 Clone the project repository from GitHub or download the source code.
-
-<div class="alert alert-block alert-success">
-git clone https://github.com/olu-fela/random-event-simulator.git
-cd random-event-simulator
-</div>
+- git clone https://github.com/olu-fela/random-event-simulator.git
+- cd random-event-simulator
 
 ## Step 2: Create a Virtual Environment (Optional but Recommended)
 

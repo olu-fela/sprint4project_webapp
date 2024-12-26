@@ -2,7 +2,8 @@
 
 ## Project Description
 
-The Random Event Simulator is a versatile tool designed to simulate random events based on predefined probabilities or completely stochastic processes. It allows users to model and analyze various scenarios where randomness plays a key role, such as decision-making processes, statistical experiments, or even gaming outcomes. This project is built to be simple, modular, and extensible for a variety of use cases.
+The Random Event Simulator is a versatile tool designed to simulate random events based on predefined probabilities or completely stochastic processes. 
+It allows users to model and analyze various scenarios where randomness plays a key role, such as decision-making processes, statistical experiments, or even gaming outcomes. This project is built to be simple, modular, and extensible for a variety of use cases.
 
 ## Features
 - Simulate random events using customizable configurations.
@@ -10,12 +11,16 @@ The Random Event Simulator is a versatile tool designed to simulate random event
 - Modular design for easy extension and integration.
 
 
-## Technologies Used
+## Technologies and Packages Used
 This project leverages Python for its implementation and uses several libraries to streamline its functionality:
 - Python: The core language used to implement the project.
+- Pandas: For organizing and analyzing simulation data.
+- Streamlit: For building and sharing interactive web apps.
+- Altair: For creating interactive declarative visualizations.
+- Plotly Express: For quick and easy creation of interactive plots and charts.
 - NumPy: For random number generation and mathematical computations.
 - Matplotlib: To visualize simulation results (e.g., histograms, probability distributions).
-- Pandas: For organizing and analyzing simulation data.
+
 
 ## Installation and Setup
 To run the Random Event Simulator on your local machine, follow these steps:
@@ -27,8 +32,10 @@ Ensure you have Python 3.8 or above installed on your system. You can check your
 ## Step 1: Clone the Repository
 Clone the project repository from GitHub or download the source code.
 
-git clone https://github.com/your-username/random-event-simulator.git
+<div class="alert alert-block alert-success">
+git clone https://github.com/olu-fela/random-event-simulator.git
 cd random-event-simulator
+</div>
 
 ## Step 2: Create a Virtual Environment (Optional but Recommended)
 

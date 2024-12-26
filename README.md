@@ -1,6 +1,4 @@
-# sprint4project_webapp
-
-# Random Event Simulator
+# sprint4project_webapp - Random Event Simulator
 
 ## Project Description
 

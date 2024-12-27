@@ -26,8 +26,16 @@ if uploaded_file:
     st.write("### Dataset Preview")
     st.write(df.head())
 
+    # Sidebar menu for visualizations
+    st.sidebar.header("Visualization Menu")
+    chart_selection = st.sidebar.selectbox(
+        "Select a chart to display:",
+        ["Histogram", "Scatter Plot", "Scatterplot Matrix", "Heatmap", "Distplot", "Bar Chart", "Boxplot"]
+    )
+
     # Handle missing values
     st.sidebar.header("Data Cleaning")
+    
     if st.sidebar.checkbox("Show Missing Values Summary"):
         missing_summary = df.isnull().sum()
         st.write("### Missing Values Summary")
@@ -53,12 +61,7 @@ if uploaded_file:
     st.write("### Cleaned Dataset Preview")
     st.write(df_cleaned.head())
 
-    # Sidebar menu for visualizations
-    st.sidebar.header("Visualization Menu")
-    chart_selection = st.sidebar.selectbox(
-        "Select a chart to display:",
-        ["Histogram", "Scatter Plot", "Scatterplot Matrix", "Heatmap", "Distplot", "Bar Chart", "Boxplot"]
-    )
+    
 
     numeric_columns = df_cleaned.select_dtypes(include=["float64", "int64"]).columns.tolist()
     categorical_columns = df_cleaned.select_dtypes(include=["object", "category"]).columns.tolist()

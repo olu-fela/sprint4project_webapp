@@ -8,8 +8,7 @@ import plotly.express as px
 st.set_page_config(page_title="Data Visualization App", layout="wide")
 
 # Header and Introduction
-st.header("TripleTen Data Science Bootcamp - Sprint 4 Project")
-st.header("Interactive Data Visualization and Analysis App")
+st.header("Interactive Exploratory Data Visualization and Analysis App")
 st.markdown("""This app is my very first attempt at deploying a Web App on Exploratory Data Anaylisis performed for Car Advertisement Dataset! 
 This app allows you to:
 - Upload a dataset (CSV format).
@@ -126,7 +125,6 @@ else:
 st.markdown("""
 <hr style="border:2px solid gray"> </hr>
 <p style="text-align:center; font-size:12px;">
-    © 2024 Fela Soyemi. All rights reserved. |
-    <a href="mailto:felasoyemi@gmail.com">Contact Us</a>
+    © 2024 Fela Soyemi. All rights reserved. | TripleTen Data Science Bootcamp - Sprint 4 Project | <a href="mailto:felasoyemi@gmail.com">Contact Me</a>
 </p>
 """, unsafe_allow_html=True)

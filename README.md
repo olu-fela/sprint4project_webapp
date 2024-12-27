@@ -86,5 +86,5 @@ This project is licensed under the MIT License. See the LICENSE file for details
 If you have any questions or feedback, please contact:
 - Name: Fela Soyemi
 - Email: felasoyemi@gmail.com
-- GitHub: olu-fela
+- GitHub: [olu-fela](https://github.com/olu-fela/sprint4project_webapp)
 

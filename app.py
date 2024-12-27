@@ -8,7 +8,7 @@ import plotly.express as px
 st.set_page_config(page_title="Data Visualization App", layout="wide")
 
 # Header and Introduction
-st.header("Interactive Exploratory Data Visualization and Analysis App")
+st.header("Basic Interactive Exploratory Data Visualization and Analysis App")
 st.markdown("""This app is my very first attempt at deploying a Web App on Exploratory Data Anaylisis performed for Car Advertisement Dataset! 
 This app allows you to:
 - Upload a dataset (CSV format).

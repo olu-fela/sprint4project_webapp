@@ -1,99 +1,119 @@
 import streamlit as st
 import pandas as pd
-#import matplotlib.pyplot as plt
-#import seaborn as sns
+import matplotlib.pyplot as plt
+import seaborn as sns
 import plotly.express as px
 
-# Set the page configuration
+# Set page configuration
 st.set_page_config(page_title="Data Visualization App", layout="wide")
 
-# Header
-st.header("Interactive Data Analysis and Visualization App")
-
-# Markdown
-st.markdown("""
-This app is my very first attempt at deploying a Web App on Exploratory Data Anaylisis performed for Car Advertisement Dataset!
-* **Python libraries:** streamlit, pandas, plotly express, numpy, matplotlib, seaborn
+# Header and Introduction
+st.header("Interactive Data Visualization and Analysis App")
+st.markdown("""This app is my very first attempt at deploying a Web App on Exploratory Data Anaylisis performed for Car Advertisement Dataset! 
+This app allows you to:
+- Upload a dataset (CSV format).
+- Clean the dataset by handling missing values.
+- Filter data using an interactive sidebar.
+- Visualize the data with multiple charts including histograms, scatter plots, box plots, heatmaps, and more.
 """)
 
 # File uploader
-uploaded_file = st.file_uploader("Upload your dataset (CSV format)", type=["csv"])
+uploaded_file = st.file_uploader("Upload your dataset (CSV)", type=["csv"])
+
 if uploaded_file:
-    # Load the dataset
+    # Load dataset
     df = pd.read_csv(uploaded_file)
     st.write("### Dataset Preview")
     st.write(df.head())
 
-    # Sidebar for data cleaning options
-    st.sidebar.header("Data Cleaning Options")
-    if st.sidebar.checkbox("Show missing values summary"):
+    # Handle missing values
+    st.sidebar.header("Data Cleaning")
+    if st.sidebar.checkbox("Show Missing Values Summary"):
+        missing_summary = df.isnull().sum()
         st.write("### Missing Values Summary")
-        st.write(df.isnull().sum())
+        st.write(missing_summary)
 
-    # Allow user to choose to drop or fill missing values
-    missing_option = st.sidebar.radio(
-        "How would you like to handle missing values?",
-        ("Drop rows with missing values", "Fill missing values with a specific value")
-    )
+    missing_columns = [col for col in df.columns if df[col].isnull().sum() > 0]
+    if missing_columns:
+        st.sidebar.markdown("### Handle Missing Values")
+        drop_cols = st.sidebar.multiselect("Select columns to drop", missing_columns)
+        fill_cols = st.sidebar.multiselect("Select columns to fill", missing_columns)
+        fill_value = st.sidebar.number_input("Value to fill missing data", value=0)
 
-    if missing_option == "Drop rows with missing values":
-        df_cleaned = df.dropna()
-        st.sidebar.write("Rows with missing values dropped.")
+        df_cleaned = df.copy()
+        if drop_cols:
+            df_cleaned = df_cleaned.drop(columns=drop_cols)
+            st.sidebar.write(f"Dropped columns: {drop_cols}")
+        if fill_cols:
+            df_cleaned[fill_cols] = df_cleaned[fill_cols].fillna(fill_value)
+            st.sidebar.write(f"Filled missing values in columns: {fill_cols} with {fill_value}")
     else:
-        fill_value = st.sidebar.number_input("Enter value to fill missing data", value=0)
-        df_cleaned = df.fillna(fill_value)
-        st.sidebar.write(f"Missing values filled with: {fill_value}")
+        df_cleaned = df
 
     st.write("### Cleaned Dataset Preview")
     st.write(df_cleaned.head())
 
-    # Sidebar filtering
-    st.sidebar.header("Filter Options")
-    numeric_columns = df_cleaned.select_dtypes(include=["float64", "int64"]).columns
-    categorical_columns = df_cleaned.select_dtypes(include=["object", "category"]).columns
+    # Sidebar menu for visualizations
+    st.sidebar.header("Visualization Menu")
+    chart_selection = st.sidebar.selectbox(
+        "Select a chart to display:",
+        ["Histogram", "Scatter Plot", "Scatterplot Matrix", "Heatmap", "Distplot", "Bar Chart", "Boxplot"]
+    )
 
-    filter_column = st.sidebar.selectbox("Select a column to filter", categorical_columns)
-    filter_value = st.sidebar.text_input(f"Enter value to filter by {filter_column}")
+    numeric_columns = df_cleaned.select_dtypes(include=["float64", "int64"]).columns.tolist()
+    categorical_columns = df_cleaned.select_dtypes(include=["object", "category"]).columns.tolist()
 
-    if filter_value:
-        df_filtered = df_cleaned[df_cleaned[filter_column] == filter_value]
-        st.write(f"### Filtered Dataset by {filter_column} = {filter_value}")
-        st.write(df_filtered.head())
-    else:
-        df_filtered = df_cleaned
-
-    # Plotly Express histogram
-    st.write("### Histogram")
-    if numeric_columns.any():
-        hist_column = st.selectbox("Select a numeric column for the histogram", numeric_columns)
-        hist_chart = px.histogram(df_filtered, x=hist_column, nbins=20, title=f"Histogram of {hist_column}")
+    if chart_selection == "Histogram":
+        st.write("### Histogram")
+        column = st.selectbox("Select a column for the histogram", numeric_columns)
+        hist_chart = px.histogram(df_cleaned, x=column, nbins=20, title=f"Histogram of {column}")
         st.plotly_chart(hist_chart)
 
-    # Plotly Express scatter plot
-    st.write("### Scatter Plot")
-    if len(numeric_columns) > 1:
-        x_axis = st.selectbox("Select X-axis for scatter plot", numeric_columns, key="scatter_x")
-        y_axis = st.selectbox("Select Y-axis for scatter plot", numeric_columns, key="scatter_y")
-        scatter_chart = px.scatter(df_filtered, x=x_axis, y=y_axis, title=f"Scatter Plot: {x_axis} vs {y_axis}")
+    elif chart_selection == "Scatter Plot":
+        st.write("### Scatter Plot")
+        x_axis = st.selectbox("Select X-axis", numeric_columns, key="scatter_x")
+        y_axis = st.selectbox("Select Y-axis", numeric_columns, key="scatter_y")
+        scatter_chart = px.scatter(df_cleaned, x=x_axis, y=y_axis, title=f"Scatter Plot: {x_axis} vs {y_axis}")
         st.plotly_chart(scatter_chart)
 
-    # Checkbox to show additional plots
-    st.write("### Additional Visualizations")
-    if st.checkbox("Show bar plot"):
-        if categorical_columns.any():
-            bar_column = st.selectbox("Select a categorical column for the bar plot", categorical_columns)
-            bar_chart = px.bar(df_filtered, x=bar_column, title=f"Bar Plot of {bar_column}")
-            st.plotly_chart(bar_chart)
-
-    if st.checkbox("Show box plot"):
-        if numeric_columns.any():
-            box_column = st.selectbox("Select a numeric column for the box plot", numeric_columns)
-            box_chart = px.box(df_filtered, y=box_column, title=f"Box Plot of {box_column}")
-            st.plotly_chart(box_chart)
-
-    if st.checkbox("Show scatter matrix"):
-        scatter_matrix_chart = px.scatter_matrix(df_filtered, dimensions=numeric_columns[:4], title="Scatter Matrix")
+    elif chart_selection == "Scatterplot Matrix":
+        st.write("### Scatterplot Matrix")
+        scatter_matrix_chart = px.scatter_matrix(df_cleaned, dimensions=numeric_columns[:4], title="Scatterplot Matrix")
         st.plotly_chart(scatter_matrix_chart)
+
+    elif chart_selection == "Heatmap":
+        st.write("### Heatmap")
+        if len(numeric_columns) > 1:
+            corr_matrix = df_cleaned[numeric_columns].corr()
+            heatmap_fig = px.imshow(corr_matrix, text_auto=True, title="Correlation Heatmap")
+            st.plotly_chart(heatmap_fig)
+
+    elif chart_selection == "Distplot":
+        st.write("### Distribution Plot")
+        x_axis = st.selectbox("Select X-axis", numeric_columns, key="dist_x")
+        y_axis = st.selectbox("Select Y-axis (Optional)", numeric_columns + [None], key="dist_y")
+        dist_chart = px.histogram(
+            df_cleaned, x=x_axis, y=y_axis, marginal="violin", title=f"Distribution of {x_axis}"
+        )
+        st.plotly_chart(dist_chart)
+
+    elif chart_selection == "Bar Chart":
+        st.write("### Bar Chart")
+        x_axis = st.selectbox("Select X-axis", categorical_columns + numeric_columns, key="bar_x")
+        y_axis = st.selectbox("Select Y-axis", numeric_columns, key="bar_y")
+        bar_chart = px.bar(df_cleaned, x=x_axis, y=y_axis, title=f"Bar Chart: {x_axis} vs {y_axis}")
+        st.plotly_chart(bar_chart)
+
+    elif chart_selection == "Boxplot":
+        st.write("### Boxplot")
+        y_axis = st.selectbox("Select Y-axis", numeric_columns, key="box_y")
+        box_chart = px.box(df_cleaned, y=y_axis, title=f"Box Plot of {y_axis}")
+        st.plotly_chart(box_chart)
+
+    # Checkbox to show raw data
+    if st.checkbox("Show raw data"):
+        st.write("### Raw Dataset")
+        st.write(df_cleaned)
 
 else:
     st.info("Please upload a CSV file to proceed.")

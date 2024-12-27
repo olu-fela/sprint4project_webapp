@@ -8,6 +8,7 @@ import plotly.express as px
 st.set_page_config(page_title="Data Visualization App", layout="wide")
 
 # Header and Introduction
+st.header("TripleTen Data Science Bootcamp - Sprint 4 Project")
 st.header("Interactive Data Visualization and Analysis App")
 st.markdown("""This app is my very first attempt at deploying a Web App on Exploratory Data Anaylisis performed for Car Advertisement Dataset! 
 This app allows you to:

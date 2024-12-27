@@ -53,46 +53,7 @@ if uploaded_file:
     st.write("### Cleaned Dataset Preview")
     st.write(df_cleaned.head())
 
-    # Identify and suggest columns to convert to datetime
-    st.header("Identify Date-Like Columns")
-    st.markdown("""
-    This section identifies columns in your dataset that might contain date-like content and suggests converting them to datetime format.
-    """)
-
-    # Function to identify date-like columns
-    def suggest_datetime_conversion(df):
-        date_like_columns = []
-        for col in df.columns:
-            if df[col].dtype == 'object':  # Check for object types
-                try:
-                    pd.to_datetime(df[col], errors='raise')  # Attempt to convert
-                    date_like_columns.append(col)
-                except (ValueError, TypeError):
-                    pass
-        return date_like_columns
-
-    # Run the function and display suggestions
-    date_like_columns = suggest_datetime_conversion(df_cleaned)
-
-    if date_like_columns:
-        st.write("The following columns may contain date-like content:")
-        st.write(date_like_columns)
-        
-        # Allow user to select columns to convert
-        columns_to_convert = st.multiselect(
-            "Select columns to convert to datetime format:",
-            options=date_like_columns
-        )
-        
-        if st.button("Convert to Datetime"):
-            for col in columns_to_convert:
-                df_cleaned[col] = pd.to_datetime(df_cleaned[col], errors='coerce')
-            st.success(f"Converted columns to datetime format: {columns_to_convert}")
-            st.write("Updated Dataset:")
-            st.write(df_cleaned.head())
-    else:
-        st.write("No date-like columns were detected in the dataset.")
-
+    
     def look_like_datetime(col):
         if col.dtype == 'object':  # Check for object types
             try:

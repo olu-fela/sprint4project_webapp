@@ -1,82 +1,61 @@
 import streamlit as st
 import pandas as pd
-import base64
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-import yfinance as yf
+import plotly.express as px
 
-st.title('S&P 500 App')
+
+# Set the page title
+st.set_page_config(page_title="Streamlit and Plotly App", layout="wide")
 
 st.markdown("""
-This app retrieves the list of the **S&P 500** (from Wikipedia) and its corresponding **stock closing price** (year-to-date)!
-* **Python libraries:** base64, pandas, streamlit, numpy, matplotlib, seaborn
-* **Data source:** [Wikipedia](https://en.wikipedia.org/wiki/List_of_S%26P_500_companies).
+This app is my very first attempt at deploying a Web App on Exploratory Data Anaylisis performed for Car Advertisement Dataset!
+* **Python libraries:** streamlit, pandas, plotly express, numpy, matplotlib, seaborn
 """)
 
-st.sidebar.header('User Input Features')
+# Header
+st.header("Interactive Data Visualization with Streamlit and Plotly")
 
-# Web scraping of S&P 500 data
-#
-@st.cache
-def load_data():
-    url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-    html = pd.read_html(url, header = 0)
-    df = html[0]
-    return df
+# Sidebar
+#st.sidebar.header('User Input Features')
 
-df = load_data()
-sector = df.groupby('GICS Sector')
+# Upload dataset or read from a local CSV
+uploaded_file = st.file_uploader("Upload your dataset (CSV)", type=["csv"])
+if uploaded_file is not None:
+    # Load the dataset
+    df = pd.read_csv(uploaded_file)
+    st.write("Dataset Preview:")
+    st.write(df.head())
 
-# Sidebar - Sector selection
-sorted_sector_unique = sorted( df['GICS Sector'].unique() )
-selected_sector = st.sidebar.multiselect('Sector', sorted_sector_unique, sorted_sector_unique)
+    # Histogram
+    st.subheader("Histogram")
+    numeric_columns = df.select_dtypes(include=['float64', 'int64', 'int32']).columns
+    if len(numeric_columns) > 0:
+        x_axis = st.selectbox("Select the X-axis for the histogram:", numeric_columns, key="histogram")
+        histogram = px.histogram(df, x=x_axis, nbins=20, title=f"Histogram of {x_axis}")
+        st.plotly_chart(histogram, use_container_width=True)
+    else:
+        st.warning("No numeric columns available for the histogram.")
 
-# Filtering data
-df_selected_sector = df[ (df['GICS Sector'].isin(selected_sector)) ]
+    # Scatter plot
+    st.subheader("Scatter Plot")
+    if len(numeric_columns) > 1:
+        x_axis = st.selectbox("Select the X-axis for the scatter plot:", numeric_columns, key="scatter_x")
+        y_axis = st.selectbox("Select the Y-axis for the scatter plot:", numeric_columns, key="scatter_y")
+        scatter = px.scatter(df, x=x_axis, y=y_axis, title=f"Scatter Plot: {x_axis} vs {y_axis}")
+        st.plotly_chart(scatter, use_container_width=True)
+    else:
+        st.warning("Not enough numeric columns available for the scatter plot.")
 
-st.header('Display Companies in Selected Sector')
-st.write('Data Dimension: ' + str(df_selected_sector.shape[0]) + ' rows and ' + str(df_selected_sector.shape[1]) + ' columns.')
-st.dataframe(df_selected_sector)
-
-# Download S&P500 data
-# https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
-def filedownload(df):
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()  # strings <-> bytes conversions
-    href = f'<a href="data:file/csv;base64,{b64}" download="SP500.csv">Download CSV File</a>'
-    return href
-
-st.markdown(filedownload(df_selected_sector), unsafe_allow_html=True)
-
-# https://pypi.org/project/yfinance/
-
-data = yf.download(
-        tickers = list(df_selected_sector[:10].Symbol),
-        period = "ytd",
-        interval = "1d",
-        group_by = 'ticker',
-        auto_adjust = True,
-        prepost = True,
-        threads = True,
-        proxy = None
-    )
-
-# Plot Closing Price of Query Symbol
-def price_plot(symbol):
-  df = pd.DataFrame(data[symbol].Close)
-  df['Date'] = df.index
-  plt.fill_between(df.Date, df.Close, color='skyblue', alpha=0.3)
-  plt.plot(df.Date, df.Close, color='skyblue', alpha=0.8)
-  plt.xticks(rotation=90)
-  plt.title(symbol, fontweight='bold')
-  plt.xlabel('Date', fontweight='bold')
-  plt.ylabel('Closing Price', fontweight='bold')
-  return st.pyplot()
-
-num_company = st.sidebar.slider('Number of Companies', 1, 5)
-
-if st.button('Show Plots'):
-    st.header('Stock Closing Price')
-    for i in list(df_selected_sector.Symbol)[:num_company]:
-        price_plot(i)
+    # Checkbox to filter data
+    st.subheader("Filter Data")
+    checkbox = st.checkbox("Show only rows where column 'days_listed' > 30 (if available)")
+    if checkbox and 'days_listed' in df.columns:
+        filtered_df = df[df['days_listed'] > 30]
+        st.write(f"Filtered Dataset (rows where 'days_listed' > 30):")
+        st.write(filtered_df)
+    else:
+        st.write("No filter applied, showing the full dataset.")
+else:
+    st.info("Please upload a CSV file to proceed.")

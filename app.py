@@ -120,3 +120,12 @@ if uploaded_file:
 
 else:
     st.info("Please upload a CSV file to proceed.")
+
+# Footer
+st.markdown("""
+<hr style="border:2px solid gray"> </hr>
+<p style="text-align:center; font-size:12px;">
+    © 2024 Fela Soyemi. All rights reserved. |
+    <a href="mailto:felasoyemi@gmail.com">Contact Us</a>
+</p>
+""", unsafe_allow_html=True)

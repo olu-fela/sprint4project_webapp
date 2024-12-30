@@ -177,94 +177,124 @@ if df is not None:
     # Bar Plot: Total Price by Decade Range
     elif chart_type == "Bar Plot: Total Price by Decade Range":
         st.subheader("Total Sale Price by Decade Range")
+        # Define bins and labels for model year ranges
         bins = [1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020]
-        labels = ["1900-1910", "1910-1920", "1920-1930", "1930-1940", "1940-1950", "1950-1960", "1960-1970", "1970-1980", "1980-1990", "1990-2000", "2000-2010", "2010-2020"]
+        labels = ["1900-1910", "1910-1920", "1920-1930", "1930-1940", "1940-1950", "1950-1960", 
+                "1960-1970", "1970-1980", "1980-1990", "1990-2000", "2000-2010", "2010-2020"]
+
+        # Create a new column for model year ranges
         df["model_year_range"] = pd.cut(df["model_year"], bins=bins, labels=labels, right=False)
 
-        # Calculate total price by decade
-        total_price_by_decade = df.groupby("model_year_range")["price"].sum().reset_index()
-        total_price_by_decade.columns = ["model_year_range", "total_price"]
+        # Calculate total price by model year range and make
+        total_price_by_decade_make = (
+            df.groupby(["model_year_range", "make"])["price"]
+            .sum()
+            .reset_index()
+        )
 
-        # Create a bar plot
-        plt.figure(figsize=(12, 6))
-        sns.barplot(data=total_price_by_decade, x="model_year_range", y="total_price", palette="viridis")
+        # Sort the data by model year range (ascending order)
+        total_price_by_decade_make["model_year_range"] = pd.Categorical(
+            total_price_by_decade_make["model_year_range"],
+            categories=labels,  # Ensure correct order based on predefined labels
+            ordered=True
+        )
+        total_price_by_decade_make = total_price_by_decade_make.sort_values(by="model_year_range")
 
-        # Customize the plot
-        plt.title("Total Price by Model Year Decade", fontsize=12)
-        plt.xlabel("Model Year Decade", fontsize=10)
-        plt.ylabel("Total Price (USD)", fontsize=10)
-        plt.xticks(fontsize=8)
-        plt.yticks(fontsize=8)
-        plt.gca().spines["top"].set_visible(False)
-        plt.gca().spines["right"].set_visible(False)
-        plt.grid(axis='y', linestyle='--', alpha=0.7)
 
-        # Add bar labels
-        for bar, value in zip(plt.gca().patches, total_price_by_decade["total_price"]):
-            plt.text(
-                bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 1000,
-                f"${value /1e6:,.2f}M",
-                ha="center",
-                fontsize=8
-            )
+        # Create an interactive bar plot with Plotly Express
+        fig = px.bar(
+            total_price_by_decade_make,
+            x="model_year_range",
+            y="price",
+            color="make",  # Differentiate by car make
+            title="Total Price by Model Year Decade and Make",
+            labels={"model_year_range": "Model Year Decade", "price": "Total Price (USD)", "make": "Car Make"},
+            #text=total_price_by_decade_make["price"].apply(lambda x: f"${x / 1e6:,.2f}M"),  # Add formatted labels
+        )
 
-            
-        # Show the plot
-        plt.tight_layout()
-        st.pyplot(plt)
+        # Customize layout
+        fig.update_traces(textposition="outside")  # Position text labels outside bars
+        fig.update_layout(
+            xaxis=dict(title="Model Year Decade", tickangle=0, tickfont=dict(size=10)),
+            yaxis=dict(title="Total Price (USD)", tickfont=dict(size=10)),
+            title=dict(font=dict(size=14)),
+            #plot_bgcolor="white",
+            legend_title="Car Make",  # Add legend for car makes
+        )
+
+        st.plotly_chart(fig)
 
     # Bar Plot: Sales and Revenue by Car Make
     elif chart_type == "Bar Plot: Sales and Revenue by Car Make":
         if "make" in df.columns:
             st.subheader("Sales and Revenue by Car Make")
-            # Calculate total car sales by make
-            sales_by_make = df["make"].value_counts().reset_index()
-            sales_by_make.columns = ["make", "total_sales"]
+            # Calculate total car sales by make and condition
+            sales_by_make_condition = (
+                df.groupby(["make", "condition"])["price"]
+                .count()
+                .reset_index()
+                .rename(columns={"price": "total_sales"})
+            )
 
-            # Calculate total sales revenue by make
-            revenue_by_make = df.groupby("make")["price"].sum().reset_index().sort_values(by="price", ascending=False)
-            revenue_by_make.columns = ["make", "total_revenue"]
+            # Calculate total sales revenue by make and condition
+            revenue_by_make_condition = (
+                df.groupby(["make", "condition"])["price"]
+                .sum()
+                .reset_index()
+                .rename(columns={"price": "total_revenue"})
+            )
 
-            # Create subplots
-            fig, axes = plt.subplots(1, 2, figsize=(20, 8), sharey=False)
+            # Create the first Plotly bar chart: Total car sales by make and condition
+            fig1 = px.bar(
+                sales_by_make_condition,
+                x="make",
+                y="total_sales",
+                color="condition",
+                title="Distribution of Car Sales by Make and Condition",
+                labels={"make": "Car Make", "total_sales": "Total Sales", "condition": "Condition"},
+                text="total_sales",
+                color_discrete_sequence=px.colors.sequential.Viridis,
+            )
 
-            # Plot total car sales by make
-            sns.barplot(data=sales_by_make, x="make", y="total_sales", palette="viridis", ax=axes[0])
-            axes[0].set_title("Distribution of Car Sales by Make", fontsize=16)
-            axes[0].set_xlabel("Car Make", fontsize=14)
-            axes[0].set_ylabel("Total Sales", fontsize=14)
-            axes[0].tick_params(axis="x", rotation=45)
-            # Add labels
-            for bar, value in zip(axes[0].patches, sales_by_make["total_sales"]):
-                axes[0].text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1, f"{int(value):,}",
-                            ha="center", va="bottom", fontsize=8, rotation=45)
+            # Customize the layout for fig1
+            fig1.update_traces(textposition="outside")
+            fig1.update_layout(
+                xaxis=dict(title="Car Make", tickangle=45),
+                yaxis=dict(title="Total Sales"),
+                title=dict(font=dict(size=16)),
+                legend_title="Condition",
+                #plot_bgcolor="white",
+            )
 
-            # Plot total sales revenue by make
-            sns.barplot(data=revenue_by_make, x="make", y="total_revenue", palette="plasma", ax=axes[1])
-            axes[1].set_title("Distribution of Sales Revenue by Make", fontsize=16)
-            axes[1].set_xlabel("Car Make", fontsize=14)
-            axes[1].set_ylabel("Total Revenue (USD)", fontsize=14)
-            axes[1].tick_params(axis="x", rotation=45)
+            # Create the second Plotly bar chart: Total sales revenue by make and condition
+            fig2 = px.bar(
+                revenue_by_make_condition,
+                x="make",
+                y="total_revenue",
+                color="condition",
+                title="Distribution of Sales Revenue by Make and Condition",
+                labels={"make": "Car Make", "total_revenue": "Total Revenue (USD)", "condition": "Condition"},
+                text=revenue_by_make_condition["total_revenue"].apply(lambda x: f"${x / 1e6:.2f}M"),
+                color_discrete_sequence=px.colors.sequential.Plasma,
+            )
 
-            # Add bar labels with values in millions
-            for bar, value in zip(axes[1].patches, revenue_by_make["total_revenue"]):
-                axes[1].text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1000, f"${bar.get_height() / 1e6:.2f}M",
-                            ha="center", va="bottom", fontsize=8, rotation=45)
-                
-            # Remove spines (outline box)
-            axes[0].spines["top"].set_visible(False)
-            axes[0].spines["right"].set_visible(False)
-            axes[0].grid(axis='y', linestyle='--', alpha=0.7)
+            # Customize the layout for fig2
+            fig2.update_traces(textposition="outside")
+            fig2.update_layout(
+                xaxis=dict(title="Car Make", tickangle=45),
+                yaxis=dict(title="Total Revenue (USD)"),
+                title=dict(font=dict(size=16)),
+                legend_title="Condition",
+                #plot_bgcolor="white",
+            )
 
-            axes[1].spines["top"].set_visible(False)
-            axes[1].spines["right"].set_visible(False)
-            axes[1].grid(axis='y', linestyle='--', alpha=0.7)
+            # Display the plots
+            #fig1.show()
+            #fig2.show()
 
-            # Adjust layout
-            plt.tight_layout()
-
-            st.pyplot(plt)
+            #st.pyplot(plt)
+            st.plotly_chart(fig1)
+            st.plotly_chart(fig2)
         else:
             st.warning("The dataset must include 'make' for this chart.")
 
@@ -314,45 +344,67 @@ if df is not None:
     elif chart_type == "Bar Plot: Average Price and Total Sales by Fuel Type":
         # Calculate average price and total sales by fuel type
         st.subheader("Average Price and Total Sales by Fuel Type")
-        avg_price_by_fuel = df.groupby("fuel")["price"].mean().reset_index().rename(columns={"price": "average_price"})
-        total_sales_by_fuel = df.groupby("fuel")["price"].count().reset_index().rename(columns={"price": "total_sales"})
+        # Calculate average price by fuel type and condition
+        avg_price_by_fuel_condition = (
+            df.groupby(["fuel", "condition"])["price"]
+            .mean()
+            .reset_index()
+            .rename(columns={"price": "average_price"})
+        )
 
-        # Create subplots
-        fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+        # Calculate total sales by fuel type and condition
+        total_sales_by_fuel_condition = (
+            df.groupby(["fuel", "condition"])["price"]
+            .count()
+            .reset_index()
+            .rename(columns={"price": "total_sales"})
+        )
 
-        # Average Price by Fuel Type
-        sns.barplot(data=avg_price_by_fuel, x="fuel", y="average_price", palette="viridis", ax=axes[0])
-        axes[0].set_title("Average Price by Fuel Type", fontsize=16)
-        axes[0].set_xlabel("Fuel Type", fontsize=14)
-        axes[0].set_ylabel("Average Price (USD)", fontsize=14)
-        axes[0].tick_params(axis="x")
-        axes[0].spines["top"].set_visible(False)
-        axes[0].spines["right"].set_visible(False)
-        axes[0].grid(axis='y', linestyle='--', alpha=0.7)
+        # Create the first Plotly bar chart: Average Price by Fuel Type and Condition
+        fig1 = px.bar(
+            avg_price_by_fuel_condition,
+            x="fuel",
+            y="average_price",
+            color="condition",  # Differentiate bars by condition
+            title="Average Price by Fuel Type and Condition",
+            labels={"fuel": "Fuel Type", "average_price": "Average Price (USD)", "condition": "Condition"},
+            text=avg_price_by_fuel_condition["average_price"].apply(lambda x: f"${x:,.0f}"),  # Add labels
+            color_discrete_sequence=px.colors.qualitative.Vivid,  # Set a qualitative color palette
+        )
 
-        # Add labels
-        for bar, value in zip(axes[0].patches, avg_price_by_fuel["average_price"]):
-            axes[0].text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1, f"${value:,.0f}",
-                        ha="center", va="bottom", fontsize=10)
+        # Customize the layout for fig1
+        fig1.update_traces(textposition="outside")
+        fig1.update_layout(
+            xaxis=dict(title="Fuel Type"),
+            yaxis=dict(title="Average Price (USD)"),
+            title=dict(font=dict(size=16)),
+            legend_title="Condition",
+        )
 
-        # Total Sales by Fuel Type
-        sns.barplot(data=total_sales_by_fuel, x="fuel", y="total_sales", palette="plasma", ax=axes[1])
-        axes[1].set_title("Total Sales by Fuel Type", fontsize=16)
-        axes[1].set_xlabel("Fuel Type", fontsize=14)
-        axes[1].set_ylabel("Total Sales", fontsize=14)
-        axes[1].tick_params(axis="x")
-        axes[1].spines["top"].set_visible(False)
-        axes[1].spines["right"].set_visible(False)
-        axes[1].grid(axis='y', linestyle='--', alpha=0.7)
+        # Create the second Plotly bar chart: Total Sales by Fuel Type and Condition
+        fig2 = px.bar(
+            total_sales_by_fuel_condition,
+            x="fuel",
+            y="total_sales",
+            color="condition",  # Differentiate bars by condition
+            title="Total Sales by Fuel Type and Condition",
+            labels={"fuel": "Fuel Type", "total_sales": "Total Sales", "condition": "Condition"},
+            text=total_sales_by_fuel_condition["total_sales"],  # Add labels
+            color_discrete_sequence=px.colors.qualitative.Pastel,  # Set a qualitative color palette
+        )
 
-        # Add labels
-        for bar, value in zip(axes[1].patches, total_sales_by_fuel["total_sales"]):
-            axes[1].text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1, f"{value:,.0f}",
-                        ha="center", va="bottom", fontsize=10)
+        # Customize the layout for fig2
+        fig2.update_traces(textposition="outside")
+        fig2.update_layout(
+            xaxis=dict(title="Fuel Type"),
+            yaxis=dict(title="Total Sales"),
+            title=dict(font=dict(size=16)),
+            legend_title="Condition",
+        )
 
-        # Adjust layout
-        plt.tight_layout()
-        st.pyplot(plt)
+        # Display the plots
+        st.plotly_chart(fig1)
+        st.plotly_chart(fig2)
 
     # Bar Plot: Sales by Car Brand
     elif chart_type == "Bar Plot: Average Days Listing by Car Brand":
@@ -401,57 +453,74 @@ if df is not None:
     # Bar Plot: Sales by Model Year Decade Range
     elif chart_type == "Bar Plot: Sales by Model Year Decade Range":
         st.subheader("Sales by Model Year Decade Range")
+        # Define bins and labels for model year ranges
         bins = [1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020]
-        labels = ["1900-1910", "1910-1920", "1920-1930", "1930-1940", "1940-1950", "1950-1960", "1960-1970", "1970-1980", "1980-1990", "1990-2000", "2000-2010", "2010-2020"]
+        labels = ["1900-1910", "1910-1920", "1920-1930", "1930-1940", "1940-1950", "1950-1960", 
+                "1960-1970", "1970-1980", "1980-1990", "1990-2000", "2000-2010", "2010-2020"]
+
+        # Add a new column for model year ranges
         df["model_year_range"] = pd.cut(df["model_year"], bins=bins, labels=labels, right=False)
 
-        # Calculate median price by decade
-        median_price_by_decade = df.groupby("model_year_range")["price"].median().reset_index()
-        median_price_by_decade.columns = ["model_year_range", "median_price"]
+        # Calculate median price by model year range and make
+        median_price_by_decade_make = (
+            df.groupby(["model_year_range", "make"])["price"]
+            .median()
+            .reset_index()
+            .rename(columns={"price": "median_price"})
+        )
 
-        # Calculate total cars listed by decade
-        total_cars_by_decade = df["model_year_range"].value_counts().reset_index()
-        total_cars_by_decade.columns = ["model_year_range", "total_cars"]
-        total_cars_by_decade = total_cars_by_decade.sort_values(by="model_year_range")
+        # Calculate total cars listed by model year range and make
+        total_cars_by_decade_make = (
+            df.groupby(["model_year_range", "make"])
+            .size()
+            .reset_index(name="total_cars")
+        )
 
-        # Create subplots
-        fig, axes = plt.subplots(1, 2, figsize=(16, 6), sharey=False)
+        # Create the first Plotly bar chart: Median Price by Decade and Make
+        fig1 = px.bar(
+            median_price_by_decade_make,
+            x="model_year_range",
+            y="median_price",
+            color="make",  # Differentiate by car make
+            title="Median Car Price by Decade and Make",
+            labels={"model_year_range": "Model Year Decade", "median_price": "Median Price (USD)", "make": "Car Make"},
+            text=median_price_by_decade_make["median_price"].apply(lambda x: f"${x / 1e3:.2f}K"),  # Add formatted labels
+            color_discrete_sequence=px.colors.qualitative.Vivid,
+        )
 
-        # Plot average price by decade
-        sns.barplot(data=median_price_by_decade, x="model_year_range", y="median_price", palette="viridis", ax=axes[0])
-        axes[0].set_title("Median Car Price by Decade", fontsize=16)
-        axes[0].set_xlabel("Model Year Decade", fontsize=14)
-        axes[0].set_ylabel("Median Car Price (USD)", fontsize=14)
-        axes[0].tick_params(axis="x", rotation=90)
-        axes[0].spines["top"].set_visible(False)
-        axes[0].spines["right"].set_visible(False)
-        axes[0].grid(axis='y', linestyle='--', alpha=0.7)
+        # Customize layout for fig1
+        fig1.update_traces(textposition="outside")
+        fig1.update_layout(
+            xaxis=dict(title="Model Year Decade", tickangle=0),
+            yaxis=dict(title="Median Price (USD)"),
+            title=dict(font=dict(size=16)),
+            legend_title="Car Make",
+        )
 
-        # Add labels
-        for bar, value in zip(axes[0].patches, median_price_by_decade["median_price"]):
-            axes[0].text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1, f"${bar.get_height() / 1e3:.2f}k",
-                        ha="center", va="bottom", fontsize=8)
+        # Create the second Plotly bar chart: Total Cars Listed by Decade and Make
+        fig2 = px.bar(
+            total_cars_by_decade_make,
+            x="model_year_range",
+            y="total_cars",
+            color="make",  # Differentiate by car make
+            title="Total Cars Listed by Decade and Make",
+            labels={"model_year_range": "Model Year Decade", "total_cars": "Total Cars Listed", "make": "Car Make"},
+            text=total_cars_by_decade_make["total_cars"],  # Add labels
+            color_discrete_sequence=px.colors.qualitative.Pastel,
+        )
 
+        # Customize layout for fig2
+        fig2.update_traces(textposition="outside")
+        fig2.update_layout(
+            xaxis=dict(title="Model Year Decade", tickangle=0),
+            yaxis=dict(title="Total Cars Listed"),
+            title=dict(font=dict(size=16)),
+            legend_title="Car Make",
+        )
 
-
-        # Plot total cars listed by decade
-        sns.barplot(data=total_cars_by_decade, x="model_year_range", y="total_cars", palette="plasma", ax=axes[1])
-        axes[1].set_title("Total Cars Listed by Decade", fontsize=16)
-        axes[1].set_xlabel("Model Year Decade", fontsize=14)
-        axes[1].set_ylabel("Total Cars Listed", fontsize=14)
-        axes[1].tick_params(axis="x", rotation=90)
-        axes[1].spines["top"].set_visible(False)
-        axes[1].spines["right"].set_visible(False)
-        axes[1].grid(axis='y', linestyle='--', alpha=0.7)
-
-        # Add bar labels with values in millions
-        for bar, value in zip(axes[1].patches, total_cars_by_decade["total_cars"]):
-            axes[1].text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1000, f"{int(value):,}",
-                        ha="center", va="bottom", fontsize=8)
-
-        # Adjust layout
-        plt.tight_layout()
-        st.pyplot(plt)
+        # Display the plots
+        st.plotly_chart(fig1)
+        st.plotly_chart(fig2)
         
     # Histogram: Price Distribution
     elif chart_type == "Histogram: Price Distribution":
@@ -480,7 +549,7 @@ if df is not None:
 
     # Histogram: Odometer Distribution
     elif chart_type == "Histogram: Odometer Distribution":
-        st.subheader("Odometer Distribution")
+        st.subheader("Vehicle Mileage Distribution")
         plt.figure(figsize=(12, 4))
         sns.histplot(df["odometer"], bins=50, kde=True, element="bars", color="skyblue")
         plt.title("Vehicle Mileage Distribution")

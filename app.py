@@ -27,10 +27,6 @@ def load_data():
 df = load_data()
 
 if df is not None:
-
-    if "model_year" in df.columns:
-        df["decade"] = (df["model_year"] // 10 * 10).astype(str) + "s"
-    
     # Split the 'model' column into 'make' and 'model_type'
     if "model" in df.columns:
         df[["make", "model_type"]] = df["model"].str.split(" ", n=1, expand=True)
@@ -46,7 +42,6 @@ if df is not None:
     if "date_posted" in df.columns:
         df["date_posted"] = pd.to_datetime(df["date_posted"])
         df["date_sold"] = df["date_posted"] + pd.to_timedelta(df["days_listed"], unit="d")
-        df["day_of_week_sold"] = df["date_sold"].dt.day_name()
 
     if "is_4wd" in df.columns:
         df['is_4wd'].fillna(0, inplace=True)
@@ -96,16 +91,17 @@ if df is not None:
         # Drop the auxiliary column
         df = df.drop(columns=["mean_odometer"])
 
-  
+    
     
     # Header and Introduction
     st.title("Interactive Data Visualization with Streamlit")
-    st.header("Car Sales Analysis")
+    st.header("Car Advertisement Data Analysis")
     st.markdown("""
-    This application allows you to:
-    - Upload a CSV dataset.
-    - Visualize data interactively using Plotly and Seaborn charts.
+    This application allows you to visualize Car Advertisement data interactively using Plotly and Seaborn charts.
     """)
+
+    st.write("### Dataset Preview")
+    st.write(df.head(10))
 
     # Streamlit app layout
 

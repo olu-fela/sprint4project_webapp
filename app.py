@@ -85,20 +85,16 @@ if uploaded_file:
         box_chart = px.box(df, y=y_axis, x=x_axis, title=f"Box Plot of {y_axis} by {x_axis}")
         st.plotly_chart(box_chart)
 
-    # Data Cleaning
-    def look_like_datetime(col):
-        if col.dtype == 'object':  # Check for object types
-            try:
-                pd.to_datetime(col, errors='raise')  # Attempt to convert
-                col = pd.to_datetime(col, errors='coerce')
-                return col.dt.date
-            except (ValueError, TypeError):
-                pass
+
+    
         
+
+
     
     # Checkbox to show raw data
     if st.checkbox("Show raw data"):
         st.write("### Raw Dataset")
     
 
-  
+
+

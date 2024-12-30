@@ -27,6 +27,76 @@ def load_data():
 df = load_data()
 
 if df is not None:
+
+    if "model_year" in df.columns:
+        df["decade"] = (df["model_year"] // 10 * 10).astype(str) + "s"
+    
+    # Split the 'model' column into 'make' and 'model_type'
+    if "model" in df.columns:
+        df[["make", "model_type"]] = df["model"].str.split(" ", n=1, expand=True)
+
+        # Reorder columns to place 'brand' and 'model_number' next to 'model'
+        columns_order = (
+            df.columns[:2].tolist() +  # Columns before 'model'
+            ["model", "make", "model_type"] +  # 'model' and the new columns
+            df.columns[3:-2].tolist()  # Remaining columns after 'model'
+        )
+        df = df[columns_order]
+
+    if "date_posted" in df.columns:
+        df["date_posted"] = pd.to_datetime(df["date_posted"])
+        df["date_sold"] = df["date_posted"] + pd.to_timedelta(df["days_listed"], unit="d")
+        df["day_of_week_sold"] = df["date_sold"].dt.day_name()
+
+    if "is_4wd" in df.columns:
+        df['is_4wd'].fillna(0, inplace=True)
+
+    if "paint_color" in df.columns:
+        df['paint_color'].fillna('Unknown', inplace=True)
+
+    if "cylinders" in df.columns:
+        # Group by model and model_year and compute the median for cylinders
+        grouped_medians = (
+            df.groupby(["model", "model_year"])["cylinders"]
+            .median()
+            .reset_index()
+            .rename(columns={"cylinders": "median_cylinders"})
+        )
+
+        # Ensure median_cylinders is an integer
+        grouped_medians["median_cylinders"] = grouped_medians["median_cylinders"].round().astype("Int64")
+
+        # Merge the median values back into the original dataframe
+        df = pd.merge(df, grouped_medians, on=["model", "model_year"], how="left")
+
+        # Fill missing values in cylinders with the median
+        df["cylinders"] = df["cylinders"].fillna(df["median_cylinders"])
+
+        # Drop the auxiliary column
+        df = df.drop(columns=["median_cylinders"])
+
+    if "odometer" in df.columns:
+        # Group by relevant columns and compute the mean for odometer
+        group_by_columns = ["model_year", "model", "fuel", "transmission", "type", "is_4wd"]
+
+        # Compute mean odometer for each group
+        grouped_means = (
+            df.groupby(group_by_columns, dropna=False)["odometer"]
+            .mean()
+            .reset_index()
+            .rename(columns={"odometer": "mean_odometer"})
+        )
+
+        # Merge the mean values back into the original dataframe
+        df = pd.merge(df, grouped_means, on=group_by_columns, how="left")
+
+        # Fill missing values in odometer with the computed mean
+        df["odometer"] = df["odometer"].fillna(df["mean_odometer"])
+
+        # Drop the auxiliary column
+        df = df.drop(columns=["mean_odometer"])
+
+  
     
     # Header and Introduction
     st.title("Interactive Data Visualization with Streamlit")
@@ -427,3 +497,5 @@ if df is not None:
 
 else:
     st.warning("Please upload a CSV file to proceed.")
+
+

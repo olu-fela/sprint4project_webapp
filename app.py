@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import seaborn as sns
+import numpy as np
 import matplotlib.pyplot as plt
 import plotly.express as px
 
@@ -525,8 +526,8 @@ if df is not None:
     # Histogram: Price Distribution
     elif chart_type == "Histogram: Price Distribution":
         st.subheader("Price Distribution")
-        plt.figure(figsize=(12, 4))
-        sns.histplot(df["price"], bins=100, kde=True, color="skyblue")
+        plt.figure(figsize=(12, 5))
+        sns.histplot(data=df, x='price', hue="transmission", bins=50, palette='viridis')
         plt.title("Price Distribution")
         plt.xlabel("Price (USD)", fontsize=10)
         plt.ylabel("Count of Cars on Sale", fontsize=10)
@@ -550,7 +551,7 @@ if df is not None:
     # Histogram: Odometer Distribution
     elif chart_type == "Histogram: Odometer Distribution":
         st.subheader("Vehicle Mileage Distribution")
-        plt.figure(figsize=(12, 4))
+        plt.figure(figsize=(12, 5))
         sns.histplot(df["odometer"], bins=50, kde=True, element="bars", color="skyblue")
         plt.title("Vehicle Mileage Distribution")
         plt.xlabel("Odometer (Miles)", fontsize=10)

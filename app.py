@@ -527,7 +527,7 @@ if df is not None:
     elif chart_type == "Histogram: Price Distribution":
         st.subheader("Price Distribution")
         plt.figure(figsize=(12, 5))
-        sns.histplot(data=df, x='price', hue="transmission", bins=50, palette='viridis')
+        sns.histplot(data=df, x='price', bins=50, palette='viridis')
         plt.title("Price Distribution")
         plt.xlabel("Price (USD)", fontsize=10)
         plt.ylabel("Count of Cars on Sale", fontsize=10)
@@ -551,15 +551,34 @@ if df is not None:
     # Histogram: Odometer Distribution
     elif chart_type == "Histogram: Odometer Distribution":
         st.subheader("Vehicle Mileage Distribution")
-        plt.figure(figsize=(12, 5))
-        sns.histplot(df["odometer"], bins=50, kde=True, element="bars", color="skyblue")
-        plt.title("Vehicle Mileage Distribution")
-        plt.xlabel("Odometer (Miles)", fontsize=10)
-        plt.ylabel("Count of Cars on Sale", fontsize=10)
-        plt.grid(axis='y', linestyle='--', alpha=0.7)
-        plt.gca().spines["top"].set_visible(False)
-        plt.gca().spines["right"].set_visible(False)
-        st.pyplot(plt)
+        # Create the histogram using Plotly Express
+        fig = px.histogram(
+            df,
+            x="odometer",
+            color="condition",  # Segment by condition
+            nbins=50,  # Equivalent to bins=50
+            title="Vehicle Mileage Distribution by Condition",
+            labels={"odometer": "Odometer (Miles)", "count": "Count of Cars on Sale", "condition": "Condition"},
+            opacity=0.8,  # Adjust bar opacity
+            color_discrete_sequence=px.colors.qualitative.Set2,  # Use a qualitative color palette
+            marginal="rug",  # Optional: add a rug plot for distribution
+        )
+
+        # Customize the layout
+        fig.update_layout(
+            xaxis=dict(title="Odometer (Miles)", title_font=dict(size=12)),
+            yaxis=dict(title="Count of Cars on Sale", title_font=dict(size=12)),
+            title=dict(font=dict(size=16)),
+            legend_title="Condition",
+            bargap=0.1,  # Adjust spacing between bars
+        )
+
+        # Add gridlines
+        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgray")
+        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgray")
+
+        # Show the plot
+        st.plotly_chart(fig)
 
 else:
     st.warning("Please upload a CSV file to proceed.")

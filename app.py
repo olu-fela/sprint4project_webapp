@@ -30,7 +30,7 @@ if uploaded_file:
     st.sidebar.header("Visualization Menu")
     chart_selection = st.sidebar.selectbox(
         "Select a chart to display:",
-        ["Histogram", "Scatter Plot", "Scatterplot Matrix", "Heatmap", "Distplot", "Bar Chart", "Boxplot"]
+        ["Histogram", "Scatter Plot", "Bar Chart", "Boxplot"]
     )
 
     numeric_columns = df.select_dtypes(include=["float64", "int64"]).columns.tolist()
@@ -49,27 +49,6 @@ if uploaded_file:
         y_axis = st.selectbox("Select Y-axis", numeric_columns, key="scatter_y")
         scatter_chart = px.scatter(df, x=x_axis, y=y_axis, title=f"Scatter Plot: {x_axis} vs {y_axis}")
         st.plotly_chart(scatter_chart)
-
-    elif chart_selection == "Scatterplot Matrix":
-        st.write("### Scatterplot Matrix")
-        scatter_matrix_chart = px.scatter_matrix(df, dimensions=numeric_columns[:4], title="Scatterplot Matrix")
-        st.plotly_chart(scatter_matrix_chart)
-
-    elif chart_selection == "Heatmap":
-        st.write("### Heatmap")
-        if len(numeric_columns) > 1:
-            corr_matrix = df[numeric_columns].corr()
-            heatmap_fig = px.imshow(corr_matrix, text_auto=True, title="Correlation Heatmap")
-            st.plotly_chart(heatmap_fig)
-
-    elif chart_selection == "Distplot":
-        st.write("### Distribution Plot")
-        x_axis = st.selectbox("Select X-axis", numeric_columns, key="dist_x")
-        y_axis = st.selectbox("Select Y-axis (Optional)", numeric_columns + [None], key="dist_y")
-        dist_chart = px.histogram(
-            df, x=x_axis, y=y_axis, marginal="violin", title=f"Distribution of {x_axis}"
-        )
-        st.plotly_chart(dist_chart)
 
     elif chart_selection == "Bar Chart":
         st.write("### Bar Chart")

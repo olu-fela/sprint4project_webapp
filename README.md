@@ -13,22 +13,14 @@ The app is designed to simplify data exploration and visualization tasks, making
 
 ## Features
 1. Upload Dataset: Upload a CSV file for analysis.
-2. Data Cleaning:
-    - Inspect missing values.
-    - Drop columns or fill missing values with a custom value.
-3. Visualizations:
+2. Visualizations:
     - Histogram: View the distribution of numeric columns.
     - Scatter Plot: Display relationships between two numeric columns.
-    - Scatterplot Matrix: Explore pairwise relationships in the dataset.
-    - Heatmap: Visualize correlations between numeric columns.
-    - Distplot: Show distributions with optional marginal views.
     - Bar Chart: Compare values of categorical or numeric columns.
     - Boxplot: Display spread and outliers of numeric data.
-4. Interactive Sidebar:
+3. Interactive Sidebar:
     - Navigate through visualization options.
-    - Filter the dataset based on categorical columns.
-    - Customize plot behavior using checkboxes and dropdown menus.
-5. Raw Data Display:
+4. Raw Data Display:
     - View the uploaded dataset after cleaning and filtering.
 
 
@@ -37,7 +29,6 @@ This project leverages Python for its implementation and uses several libraries 
 - Python: The core language used to implement the project.
 - Pandas: For organizing and analyzing simulation data.
 - Streamlit: For building and sharing interactive web apps.
-- Altair: For creating interactive declarative visualizations.
 - Plotly Express: For quick and easy creation of interactive plots and charts.
 
 
@@ -63,8 +54,7 @@ Install the required Python libraries listed in the requirements.txt file.
 
 ## Step 4: Run the Application Locally
 - Navigate to the project directory.
-- Run the Streamlit app:
-`streamlit run app.py`
+- Run the Streamlit app:`streamlit run app.py`
 - Open the local development server link in your browser (e.g. `http://localhost:10000`)
 
 ## Step 5: Deployment Instructions

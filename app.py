@@ -100,9 +100,11 @@ if df is not None:
     st.markdown("""
     This application allows you to visualize Car Advertisement data interactively using Plotly and Seaborn charts.
     """)
-
-    st.write("### Dataset Preview")
-    st.write(df.head(10))
+    # Checkbox to show raw data
+    if st.checkbox("Show Partial Dataset"):
+        st.write("### Display of first 10 rows in dataset")
+        # Display the first 10 rows of the dataset
+        st.write(df.head(10))
 
     # Streamlit app layout
 
@@ -583,4 +585,6 @@ if df is not None:
 else:
     st.warning("Please upload a CSV file to proceed.")
 
-
+ 
+    
+    
